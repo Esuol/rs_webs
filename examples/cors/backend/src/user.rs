@@ -12,7 +12,7 @@ pub struct Info {
 #[post("/user/info")]
 pub async fn info(info: web::Json<Info>) -> web::Json<Info> {
     println!("============{info:?}===========");
-    web::Json(info {
+    web::Json(Info {
         username: info.username.clone(),
         email: info.email.clone(),
         password: info.password.clone(),
