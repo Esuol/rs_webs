@@ -1,6 +1,5 @@
-workspace = { members = ["examples/cors/backend", "examples/cors/frontend"] }
 [package]
-name = "webs"
+name = "frontend"
 version = "0.1.0"
 edition = "2021"
 
