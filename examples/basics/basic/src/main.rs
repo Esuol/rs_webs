@@ -38,6 +38,38 @@ async fn welcome(req: HttpRequest, session: Session) -> Result<HttpResponse> {
         .body(include_str!("../static/welcome.html")))
 }
 
+async fn default_handler(req_method: Method) -> Result<impl Responder> {
+    match req_method {
+        Method::GET => {
+            let file = NamedFile::open("static/404.html")?
+                .customize()
+                .with_status(StatusCode::NOT_FOUND);
+            Ok(Either::Left(file))
+        }
+        _ => Ok(Either::Right(HttpResponse::MethodNotAllowed().finish())),
+    }
+}
+
+async fn response_body(path: web::Path<String>) -> HttpResponse {
+    let name = path.into_inner();
+
+    HttpResponse::Ok()
+        .content_type(ContentType::plaintext())
+        .streaming(stream! {
+            yield Ok::<_, Infallible>(web::Bytes::from("Hello "));
+            yield Ok::<_, Infallible>(web::Bytes::from(name));
+            yield Ok::<_, Infallible>(web::Bytes::from("!"));
+        })
+}
+
+async fn with_param(req: HttpRequest, path: web::Path<(String,)>) -> HttpResponse {
+    println!("{req:?}");
+
+    HttpResponse::Ok()
+        .content_type(ContentType::plaintext())
+        .body(format!("Hello {}!", path.0))
+}
+
 fn main() {
     println!("Hello, world!");
 }
