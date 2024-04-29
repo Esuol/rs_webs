@@ -12,6 +12,13 @@ use actix_web::{
 };
 use async_stream::stream;
 
+static SESSION_SIGNING_KEY: &[u8] = &[0; 64];
+
+#[get("/favicon")]
+async fn favicon() -> Result<impl Responder> {
+    Ok(NamedFile::open("static/favicon")?)
+}
+
 fn main() {
     println!("Hello, world!");
 }

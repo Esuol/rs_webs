@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "examples/basics/basic","examples/cors/backend"]
+members = [ "examples/basics/basic", "examples/basics/error-handling","examples/cors/backend"]
 
 [workspace.package]
 publish = false
