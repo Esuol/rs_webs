@@ -1,0 +1,16 @@
+[package]
+name = "basic"
+version = "0.1.0"
+publish.workspace = true
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-files.workspace = true
+actix-session = { workspace = true, features = ["cookie-session"] }
+actix-web.workspace = true
+
+async-stream = "0.3"
+env_logger.workspace = true
+log.workspace = true
