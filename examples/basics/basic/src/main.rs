@@ -1,4 +1,4 @@
-use std::{convert::Infallible, io};
+use std::{convert::Infallible, default, io};
 
 use actix_files::{Files, NamedFile};
 use actix_session::{storage::CookieSessionStore, Session, SessionMiddleware};
@@ -70,6 +70,53 @@ async fn with_param(req: HttpRequest, path: web::Path<(String,)>) -> HttpRespons
         .body(format!("Hello {}!", path.0))
 }
 
-fn main() {
-    println!("Hello, world!");
+#[actix_web::main]
+async fn main() -> io::Result<()> {
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
+    let key = actix_web::cookie::Key::from(SESSION_SIGNING_KEY);
+
+    log::info!("starting HTTP server at http://localhost:8080");
+
+    HttpServer::new(move || {
+        App::new()
+            .wrap(middleware::Compress::default())
+            .wrap(
+                SessionMiddleware::builder(CookieSessionStore::default(), key.clone())
+                    .cookie_secure(false)
+                    .build(),
+            )
+            .wrap(middleware::Logger::default())
+            .service(favicon)
+            .service(welcome)
+            .service(web::resource("/user/{name}").route(web::get().to(with_param)))
+            .service(web::resource("/async-body/{name}").route(web::get().to(response_body)))
+            .service(
+                web::resource("/test").to(|req: HttpRequest| match *req.method() {
+                    Method::GET => HttpResponse::Ok(),
+                    Method::POST => HttpResponse::MethodNotAllowed(),
+                    _ => HttpResponse::NotFound(),
+                }),
+            )
+            .service(web::resource("/error").to(|| async {
+                error::InternalError::new(
+                    io::Error::new(io::ErrorKind::Other, "test"),
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                )
+            }))
+            .service(Files::new("/static", "static").show_files_listing())
+            .service(
+                web::resource("/").route(web::get().to(|req: HttpRequest| async move {
+                    println!("{req:?}");
+                    HttpResponse::Found()
+                        .insert_header((header::LOCATION, "static/welcome.html"))
+                        .finish()
+                })),
+            )
+            .default_service(web::to(default_handler))
+    })
+    .bind(("127.0.0.1", 8080))?
+    .workers(2)
+    .run()
+    .await
 }
