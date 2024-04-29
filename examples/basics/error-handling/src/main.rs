@@ -1,5 +1,3 @@
-use std::fmt::Result;
-
 use actix_web::{web, App, Error, HttpResponse, HttpServer, ResponseError};
 use derive_more::Display;
 use rand::{
