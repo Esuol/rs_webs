@@ -3,6 +3,7 @@ use actix_web::{web, Error, HttpResponse};
 use crate::common::{Part, Product};
 
 pub async fn get_products(_query: web::Query<Option<Part>>) -> Result<HttpResponse, Error> {
+    println!("=================");
     Ok(HttpResponse::Ok().finish())
 }
 
