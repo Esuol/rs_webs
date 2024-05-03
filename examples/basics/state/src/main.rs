@@ -20,11 +20,19 @@ async fn index(
     req: HttpRequest,
 ) -> HttpResponse {
     println!("{req:?}");
+
     *counter_mutex.lock().unwrap() += 1;
     counter_cell.set(counter_cell.get() + 1);
     counter_atomic.fetch_add(1, Ordering::SeqCst);
 
-    
+    let body = format!(
+        "global mutex counter: {}, local counter: {}, global atomic counter: {}",
+        *counter_mutex.lock().unwrap(),
+        counter_cell.get(),
+        counter_atomic.load(Ordering::SeqCst),
+    );
+
+    HttpResponse::Ok().body(body)
 }
 
 fn main() {
