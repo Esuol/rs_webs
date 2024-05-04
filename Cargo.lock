@@ -1338,6 +1338,12 @@ dependencies = [
 [[package]]
 name = "static-files"
 version = "0.1.0"
+dependencies = [
+ "actix-files",
+ "actix-web",
+ "env_logger",
+ "log",
+]
 
 [[package]]
 name = "subtle"
