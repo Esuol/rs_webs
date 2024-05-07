@@ -25,6 +25,7 @@ pub async fn index(
     let mut context = Context::new();
     context.insert("tasks", &tasks);
 
+    // Session is set during operations on other endpoints that can redirect to index
     if let Some(flash) = session::get_flash(&session)? {
         context.insert("msg", &(flash.kind, flash.message));
         session::clear_flash(&session);
@@ -55,7 +56,7 @@ pub async fn create(
             .await
             .map_err(error::ErrorInternalServerError)?;
 
-        session::set_flash(&session, FlashMessage::success("Task successfully created"))?;
+        session::set_flash(&session, FlashMessage::success("Task successfully added"))?;
 
         Ok(web::Redirect::to("/").using_status_code(StatusCode::FOUND))
     }
@@ -73,7 +74,7 @@ pub struct UpdateForm {
 
 pub async fn update(
     db: web::Data<SqlitePool>,
-    params: web::Form<UpdateParams>,
+    params: web::Path<UpdateParams>,
     form: web::Form<UpdateForm>,
     session: Session,
 ) -> Result<impl Responder, Error> {
@@ -115,6 +116,28 @@ async fn delete(
 
 pub fn bad_request<B>(res: dev::ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
     let new_resp = NamedFile::open("static/errors/400.html")?
+        .customize()
+        .with_status(res.status())
+        .respond_to(res.request())
+        .map_into_boxed_body()
+        .map_into_right_body();
+
+    Ok(ErrorHandlerResponse::Response(res.into_response(new_resp)))
+}
+
+pub fn not_found<B>(res: dev::ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
+    let new_resp = NamedFile::open("static/errors/404.html")?
+        .customize()
+        .with_status(res.status())
+        .respond_to(res.request())
+        .map_into_boxed_body()
+        .map_into_right_body();
+
+    Ok(ErrorHandlerResponse::Response(res.into_response(new_resp)))
+}
+
+pub fn internal_server_error<B>(res: dev::ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
+    let new_resp = NamedFile::open("static/errors/500.html")?
         .customize()
         .with_status(res.status())
         .respond_to(res.request())

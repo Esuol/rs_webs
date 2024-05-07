@@ -22,11 +22,11 @@ pub async fn create_task(todo: String, pool: &SqlitePool) -> Result<(), &'static
         .map_err(|_| "Error creating task")
 }
 
-pub async fn toogle_task(id: i32, pool: &SqlitePool) -> Result<(), &'static str> {
-    Task::delete_with_id(id, pool)
+pub async fn toggle_task(id: i32, pool: &SqlitePool) -> Result<(), &'static str> {
+    Task::toggle_with_id(id, pool)
         .await
         .map(|_| ())
-        .map_err(|_| "Error deleting task")
+        .map_err(|_| "Error toggling task completion")
 }
 
 pub async fn delete_task(id: i32, pool: &SqlitePool) -> Result<(), &'static str> {

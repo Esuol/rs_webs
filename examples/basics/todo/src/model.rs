@@ -42,7 +42,7 @@ impl Task {
         Ok(())
     }
 
-    pub async fn toogle_with_id(id: i32, connection: &SqlitePool) -> Result<(), sqlx::Error> {
+    pub async fn toggle_with_id(id: i32, connection: &SqlitePool) -> Result<(), sqlx::Error> {
         sqlx::query!(
             r#"
             UPDATE tasks
