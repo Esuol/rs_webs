@@ -36,3 +36,27 @@ pub async fn index(
 
     Ok(HttpResponse::Ok().body(rendered))
 }
+
+#[derive(Debug, Deserialize)]
+pub struct CreateForm {
+    description: String,
+}
+
+pub async fn create(
+    params: web::Form<CreateForm>,
+    pool: web::Data<SqlitePool>,
+    session: Session,
+) -> Result<impl Responder, Error> {
+    if params.description.is_empty() {
+        session::set_flash(&session, FlashMessage::error("Description cannot be empty"))?;
+        Ok(web::Redirect::to("/").using_status_code(StatusCode::FOUND))
+    } else {
+        db::create_task(params.into_inner().description, &pool)
+            .await
+            .map_err(error::ErrorInternalServerError)?;
+
+        session::set_flash(&session, FlashMessage::success("Task successfully created"))?;
+
+        Ok(web::Redirect::to("/").using_status_code(StatusCode::FOUND))
+    }
+}
