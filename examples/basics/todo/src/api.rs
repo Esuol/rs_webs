@@ -87,3 +87,39 @@ pub async fn update(
     })
     .using_status_code(StatusCode::FOUND))
 }
+
+async fn toggle(
+    pool: web::Data<SqlitePool>,
+    params: web::Path<UpdateParams>,
+) -> Result<&'static str, Error> {
+    db::toggle_task(params.id, &pool)
+        .await
+        .map_err(error::ErrorInternalServerError)?;
+
+    Ok("/")
+}
+
+async fn delete(
+    pool: web::Data<SqlitePool>,
+    params: web::Path<UpdateParams>,
+    session: Session,
+) -> Result<&'static str, Error> {
+    db::delete_task(params.id, &pool)
+        .await
+        .map_err(error::ErrorInternalServerError)?;
+
+    session::set_flash(&session, FlashMessage::success("Task was deleted."))?;
+
+    Ok("/")
+}
+
+pub fn bad_request<B>(res: dev::ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
+    let new_resp = NamedFile::open("static/errors/400.html")?
+        .customize()
+        .with_status(res.status())
+        .respond_to(res.request())
+        .map_into_boxed_body()
+        .map_into_right_body();
+
+    Ok(ErrorHandlerResponse::Response(res.into_response(new_resp)))
+}
