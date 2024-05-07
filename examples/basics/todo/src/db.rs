@@ -15,4 +15,23 @@ pub async fn get_all_tasks(pool: &SqlitePool) -> Result<Vec<Task>, &'static str>
 
 pub async fn create_task(todo: String, pool: &SqlitePool) -> Result<(), &'static str> {
     let new_task = NewTask { description: todo };
+
+    Task::insert(new_task, pool)
+        .await
+        .map(|_| ())
+        .map_err(|_| "Error creating task")
+}
+
+pub async fn toogle_task(id: i32, pool: &SqlitePool) -> Result<(), &'static str> {
+    Task::delete_with_id(id, pool)
+        .await
+        .map(|_| ())
+        .map_err(|_| "Error deleting task")
+}
+
+pub async fn delete_task(id: i32, pool: &SqlitePool) -> Result<(), &'static str> {
+    Task::delete_with_id(id, pool)
+        .await
+        .map(|_| ())
+        .map_err(|_| "Error deleting task")
 }
