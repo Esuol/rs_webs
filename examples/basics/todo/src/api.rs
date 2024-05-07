@@ -60,3 +60,30 @@ pub async fn create(
         Ok(web::Redirect::to("/").using_status_code(StatusCode::FOUND))
     }
 }
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateParams {
+    id: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateForm {
+    _method: String,
+}
+
+pub async fn update(
+    db: web::Data<SqlitePool>,
+    params: web::Form<UpdateParams>,
+    form: web::Form<UpdateForm>,
+    session: Session,
+) -> Result<impl Responder, Error> {
+    Ok(web::Redirect::to(match form._method.as_ref() {
+        "put" => toggle(db, params).await?,
+        "delete" => delete(db, params, session).await?,
+        unsupported_method => {
+            let msg = format!("Unsupported HTTP method: {unsupported_method}");
+            return Err(error::ErrorBadRequest(msg));
+        }
+    })
+    .using_status_code(StatusCode::FOUND))
+}
