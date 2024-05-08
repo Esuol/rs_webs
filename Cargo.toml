@@ -6,8 +6,10 @@ members = [
   "examples/basics/hello-world",
   "examples/basics/nested-routing",
   "examples/basics/state",
-  "examples/basics/static-files", "examples/basics/todo",
-  "examples/cors/backend", "examples/data-factory",
+  "examples/basics/static-files",
+  "examples/basics/todo",
+  "examples/cors/backend",
+  "examples/data-factory", "examples/databases/diesel",
 ]
 
 [workspace.package]
