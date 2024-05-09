@@ -36,6 +36,46 @@ async fn get_user(
     })
 }
 
-fn main() {
-    println!("Hello, world!");
+#[post("/user")]
+async fn add_user(
+    pool: web::Data<DbPool>,
+    form: web::Json<models::NewUser>,
+) -> actix_web::Result<impl Responder> {
+    let user = web::block(move || {
+        // note that obtaining a connection from the pool is also potentially blocking
+        let mut conn = pool.get()?;
+
+        actions::insert_new_user(&mut conn, &form.name)
+    })
+    .await?
+    // map diesel query errors to a 500 error response
+    .map_err(error::ErrorInternalServerError)?;
+
+    // user was added successfully; return 201 response with new user info
+    Ok(HttpResponse::Created().json(user))
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    dotenvy::dotenv().ok();
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
+    // initialize DB pool outside of `HttpServer::new` so that it is shared across all workers
+    let pool = initialize_db_pool();
+
+    log::info!("starting HTTP server at http://localhost:8080");
+
+    HttpServer::new(move || {
+        App::new()
+            // add DB pool handle to app data; enables use of `web::Data<DbPool>` extractor
+            .app_data(web::Data::new(pool.clone()))
+            // add request logger middleware
+            .wrap(middleware::Logger::default())
+            // add route handlers
+            .service(get_user)
+            .service(add_user)
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }
