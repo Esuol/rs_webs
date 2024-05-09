@@ -4,7 +4,7 @@ extern crate diesel;
 use actix_web::{error, get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
 use diesel::{
     prelude::*,
-    r2d2::{self, Pool},
+    r2d2::{self},
 };
 use uuid::Uuid;
 
@@ -78,4 +78,12 @@ async fn main() -> std::io::Result<()> {
     .bind(("127.0.0.1", 8080))?
     .run()
     .await
+}
+
+fn initialize_db_pool() -> DbPool {
+    let conn_spec = std::env::var("DATABASE_URL").expect("DATABASE_URL should be set");
+    let manager = r2d2::ConnectionManager::<SqliteConnection>::new(conn_spec);
+    r2d2::Pool::builder()
+        .build(manager)
+        .expect("database URL should be valid path to SQLite DB file")
 }
